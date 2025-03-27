@@ -28,7 +28,7 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceCryptoData]
         reraise=True,
     )
     async def extract_async(
-        extractor_params: BinanceExtractorParams,
+        binance_extractor_params: BinanceExtractorParams,
     ) -> AsyncGenerator[list[BinanceCryptoData], None]:
         connection_string: str = "wss://stream.binance.com:9443/ws/!miniTicker@arr"
         try:
@@ -42,7 +42,9 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceCryptoData]
                             # Deserialize from json to list[dict]
                             msg_dict: list[dict[str, Any]] = json.loads(msg_string)
                             # Deserialize from list[dict] into list[BinanceCryptoData], Validation step
-                            binance_ticker_list = [BinanceCryptoData.parse_obj(item) for item in msg_dict]
+                            binance_ticker_list = [
+                                BinanceCryptoData.parse_obj(item) for item in msg_dict
+                            ]
                             yield binance_ticker_list
                         elif msg.type == aiohttp.WSMsgType.CLOSED:
                             raise ValueError("WebSocket connection closed unexpectedly")

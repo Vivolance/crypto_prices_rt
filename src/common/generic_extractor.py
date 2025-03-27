@@ -1,14 +1,11 @@
 """
 All extractors extend this base extractor class
 """
-import json
+
 import logging
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, AsyncGenerator, Any
+from typing import TypeVar, Generic, AsyncGenerator
 
-import aiohttp
-import asyncio
-from aiohttp import ClientWebSocketResponse, WSMessage
 from pydantic import BaseModel
 
 from src.utils.generic_logger import logger_setup
