@@ -5,62 +5,6 @@ from typing import AsyncGenerator, Any
 import aiohttp
 from aiohttp import WSMessage
 
-"""
-Coinbase, unlike Binance, do not provide a live stream of all its products. To solve this:
-1. Get a list of all products from coinbase rest api: https://api.pro.coinbase.com/products
-2. After getting the list of products, use it as part of the subscribe message to coinbase stream api:
-wss://ws-feed.pro.coinbase.com
-
-Subscribe message:
-{
-  "type": "subscribe",
-  "product_ids": ["ETH-USD", "ETH-EUR"],
-  "channels": [
-    "level2",
-    "heartbeat",
-    {
-      "name": "ticker",
-      "product_ids": ["ETH-BTC", "ETH-USD"]
-    }
-  ]
-}
-
-Response 1: (Confirmation)
-{
-    "type": "subscriptions",
-    "channels": [
-        {
-            "name": "ticker",
-            "product_ids": [
-                "BTC-USD",
-                "ETH-USD",
-                "... (other products)"
-            ]
-        }
-    ]
-}
-
-
-Response 2:
-{
-    "type": "ticker",
-    "sequence": 123456789,
-    "product_id": "BTC-USD",
-    "price": "30000.00",
-    "open_24h": "29500.00",
-    "volume_24h": "1200.00",
-    "low_24h": "29000.00",
-    "high_24h": "31000.00",
-    "best_bid": "29995.00",
-    "best_ask": "30005.00",
-    "side": "buy",         // Indicates whether the last trade was a buy or sell
-    "time": "2025-03-25T16:34:17.058Z",
-    "trade_id": 987654,
-    "last_size": "0.01"
-}
-
-"""
-
 
 BULLET_URL: str = "https://api.kucoin.com/api/v1/bullet-public"
 
