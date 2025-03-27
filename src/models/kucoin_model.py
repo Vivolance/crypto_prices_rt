@@ -8,7 +8,7 @@ class KucoinCryptoData(BaseModel):
     price: str
     sequence: str
     size: str
-    time: str  # Matching time of the latest transaction
+    time: int  # Matching time of the latest transaction
 
 
 class KucoinRawData(BaseModel):
