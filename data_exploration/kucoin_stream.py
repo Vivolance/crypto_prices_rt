@@ -3,7 +3,7 @@ import json
 from typing import AsyncGenerator, Any
 
 import aiohttp
-from aiohttp import ClientWebSocketResponse, WSMessage
+from aiohttp import WSMessage
 
 """
 Coinbase, unlike Binance, do not provide a live stream of all its products. To solve this:
@@ -102,7 +102,7 @@ async def socket_request() -> AsyncGenerator[dict[str, Any], None]:
                     "id": "1",  # Unique identifier for the subscription.
                     "type": "subscribe",
                     "topic": "/market/ticker:all",  # Global ticker feed for all trading pairs.
-                    "response": True  # Ask for a confirmation response.
+                    "response": True,  # Ask for a confirmation response.
                 }
                 await ws.send_json(subscribe_message)
                 print("Subscription message sent.")
