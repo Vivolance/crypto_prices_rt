@@ -90,7 +90,12 @@ Response 2:
 ```
 
 ## Points to note:
-1. Kucoin gives all ticker pairs that exist on the chain, we are only insterested in pairs against USDT
+1. Kucoin gives all ticker pairs that exist on the chain, we are only interested in pairs against USDT
 2. Kucoin symbol / instrument id differs from Binance's, requires normalization
 3. Conversion of Unix timestamp to UTC, note Kucoin's timestamp represents last transacted price
-4. 
+coin_id: string
+coin_name: string
+coin_symbol: string
+timestamp: datetime
+price: double
+source: string
