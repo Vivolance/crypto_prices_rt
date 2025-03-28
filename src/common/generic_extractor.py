@@ -14,7 +14,6 @@ logger: logging.Logger = logging.Logger(__name__)
 logger_setup(logger)
 
 # Create arbitrary typed variable that must implement from a BaseModel
-# Such as RawPrices
 ExtractorParams = TypeVar("ExtractorParams", bound=BaseModel)
 ExtractedModel = TypeVar("ExtractedModel", bound=BaseModel)
 
