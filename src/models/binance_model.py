@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class BinanceCryptoData(BaseModel):
+class BinanceRawData(BaseModel):
     e: str  # Event type
     E: int  # Event time
     s: str  # Symbol
