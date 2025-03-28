@@ -72,6 +72,7 @@ class KucoinExtractor(AsyncGenerator[KucoinExtractorParams, KucoinRawData]):
                             # To filter the welcome message
                             if "subject" in msg_dict and "data" in msg_dict:
                                 kucoin_ticker = KucoinRawData.parse_obj(msg_dict)
+                                # TODO: To batch or not to batch?
                                 yield kucoin_ticker
                         elif msg.type == aiohttp.WSMsgType.CLOSED:
                             raise ValueError("WebSocket connection closed.")
