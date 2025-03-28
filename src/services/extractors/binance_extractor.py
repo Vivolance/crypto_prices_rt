@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from tenacity import retry, wait_fixed, stop_after_attempt
 
 from src.common.generic_extractor import AsyncExtractor
-from src.models.binance_model import BinanceCryptoData
+from src.models.binance_model import BinanceRawData
 from src.utils.generic_logger import logger_setup
 
 logger: logging.Logger = logging.Logger(__name__)
@@ -20,7 +20,7 @@ class BinanceExtractorParams(BaseModel):
     pass
 
 
-class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceCryptoData]):
+class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceRawData]):
     @staticmethod
     @retry(
         wait=wait_fixed(0.01),  # ~10ms between attempts
@@ -29,7 +29,7 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceCryptoData]
     )
     async def extract_async(
         binance_extractor_params: BinanceExtractorParams,
-    ) -> AsyncGenerator[list[BinanceCryptoData], None]:
+    ) -> AsyncGenerator[list[BinanceRawData], None]:
         connection_string: str = "wss://stream.binance.com:9443/ws/!miniTicker@arr"
         try:
             async with aiohttp.ClientSession() as session:
@@ -43,7 +43,7 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceCryptoData]
                             msg_dict: list[dict[str, Any]] = json.loads(msg_string)
                             # Deserialize from list[dict] into list[BinanceCryptoData], Validation step
                             binance_ticker_list = [
-                                BinanceCryptoData.parse_obj(item) for item in msg_dict
+                                BinanceRawData.parse_obj(item) for item in msg_dict
                             ]
                             yield binance_ticker_list
                         elif msg.type == aiohttp.WSMsgType.CLOSED:
