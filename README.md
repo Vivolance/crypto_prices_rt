@@ -32,14 +32,28 @@ Raw Data:
 
 
 ### Questions
-1. Kucoin returns a single instance of a dataclass while Binance returns
-a list[dataclass]. Do I want to batch Kucoin's output so that my produce method
-in Kafka can be consistent? If so, what are the criteria for batching? So
-far, Binance batches a list of all tickers per second, but i do not know
-exactly where Kucoin cutoff is for its entire list of tickers. They both
-comes in a consistent stream
+1. Kucoin returns a single instance of a dataclass while Binance returns a list[dataclass]. Do I want to batch Kucoin's output so that my produce method
+in Kafka can be consistent? If so, what are the criteria for batching? So far, Binance batches a list of all tickers per second, but i do not know
+exactly where Kucoin cutoff is for its entire list of tickers. They both comes in a consistent stream.
+
+Problem:
+- getting different symbols
+- in random order
+- constantly streaming one at a time
+- no indication of when a batch ends
+- multiple similar ticker might come in within a time period
+- ticker may not come in within a time period
+
+Proposal:
+Per-symbol time window batching between kucoin extractor and producer.
+Creates a buffer batch which "batches" the kucoin data coming in by 2 conditions:
+1. Only produce to topic when a symbol has collected 10 messages:
+2. Produce to topic every 1 second.
+
+This prevents:
+1. Reduces strain on Kafka and kafka only produces when batch is ready
+2. 
 
 
-
-
-
+Goal: Define a batching logic for Kucoin so it makes sense to call produce(batch) at the right time without wasting 
+resources, introducing latency, or sending too few/too many messages per Kafka write.
