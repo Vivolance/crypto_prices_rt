@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from numpy import double
 from pydantic import BaseModel
 
 
@@ -11,3 +14,10 @@ class BinanceRawData(BaseModel):
     l: str  # Low
     v: str  # Total traded base asset volume
     q: str  # Total traded quote asset volume
+
+
+class BinanceTransformedData(BaseModel):
+    symbol: str
+    price: double
+    time: datetime
+    source: str
