@@ -63,14 +63,28 @@ class AbstractProducer(Generic[ProduceMessage]):
             )
 
 
-class BinanceProducer(AbstractProducer["BinanceRawData"]):
+class RawBinanceProducer(AbstractProducer["BinanceRawData"]):
     def __init__(self, producer_config: dict[str, str]) -> None:
         super().__init__(producer_config=producer_config, topic_name="binance_raw_data")
 
 
-class KucoinProducer(AbstractProducer["KucoinRawData"]):
+class RawKucoinProducer(AbstractProducer["KucoinRawData"]):
     def __init__(self, producer_config: dict[str, str]) -> None:
         super().__init__(producer_config=producer_config, topic_name="kucoin_raw_data")
+
+
+class TransformedBinanceProducer(AbstractProducer["BinanceTransformedData"]):
+    def __init__(self, producer_config: dict[str, str]) -> None:
+        super().__init__(
+            producer_config=producer_config, topic_name="binance_transformed_data"
+        )
+
+
+class TransformedKucoinProducer(AbstractProducer["KucoinTransformedData"]):
+    def __init__(self, producer_config: dict[str, str]) -> None:
+        super().__init__(
+            producer_config=producer_config, topic_name="kucoin_transformed_data"
+        )
 
 
 # Test run for Binance extractor and producer
@@ -82,7 +96,7 @@ async def main() -> None:
         "compression.type": "gzip",
     }
     params: BinanceExtractorParams = BinanceExtractorParams()
-    producer: BinanceProducer = BinanceProducer(producer_config)
+    producer: RawBinanceProducer = RawBinanceProducer(producer_config)
     async for event in extractor.extract_async(params):
         producer.produce(event)
 
