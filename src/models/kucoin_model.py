@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from numpy import double
 from pydantic import BaseModel
 
 
@@ -16,3 +19,10 @@ class KucoinRawData(BaseModel):
     type: str
     subject: str
     data: KucoinCryptoData
+
+
+class KucoinTransformedData(BaseModel):
+    symbol: str
+    price: double
+    time: datetime
+    source: str
