@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Generic, TypeVar, Optional, Any
+from typing import Generic, TypeVar, Optional, Any, Union
 
 from confluent_kafka import Producer, KafkaError, Message
 from pydantic import BaseModel
@@ -30,10 +30,14 @@ class AbstractProducer(Generic[ProduceMessage]):
         wait=wait_fixed(0.01),
         reraise=True,
     )
-    def produce(self, batch: list[ProduceMessage]) -> None:
+    def produce(self, batch: Union[ProduceMessage, list[ProduceMessage]]) -> None:
         """
-        Takes in a list of dataclass, serialize it and produce
+        Takes in a list[dataclass] or dataclass, serialize it and produce
         """
+        if isinstance(batch, BaseModel):
+            batch = [batch]  # wrap in list
+        elif not isinstance(batch, list):
+            raise ValueError("Expected a BaseModel or a list of BaseModels")
         # all message to be produced must be serialized
         # model.dumps(dataclass -> dict)
         # json.dumps (dict -> str)
