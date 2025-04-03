@@ -80,7 +80,7 @@ class KucoinRawConsumer(GenericConsumer[KucoinRawData]):
         super().__init__(
             consumer_config=consumer_config,
             topic_name="kucoin_raw_data",
-            model=KucoinRawData
+            model=KucoinRawData,
         )
 
 
@@ -89,7 +89,7 @@ class BinanceRawConsumer(GenericConsumer[BinanceRawData]):
         super().__init__(
             consumer_config=consumer_config,
             topic_name="binance_raw_data",
-            model=BinanceRawData
+            model=BinanceRawData,
         )
 
 
@@ -98,7 +98,7 @@ class KucoinTransformedConsumer(GenericConsumer[KucoinTransformedData]):
         super().__init__(
             consumer_config=consumer_config,
             topic_name="kucoin_transformed_data",
-            model=KucoinTransformedData
+            model=KucoinTransformedData,
         )
 
 
@@ -107,5 +107,5 @@ class BinanceTransformedConsumer(GenericConsumer[BinanceTransformedData]):
         super().__init__(
             consumer_config=consumer_config,
             topic_name="binance_transformed_data",
-            model=BinanceTransformedData
+            model=BinanceTransformedData,
         )
