@@ -34,19 +34,19 @@ class KucoinExtractorParams(BaseModel):
 
 
 class KucoinExtractor(AsyncGenerator[KucoinExtractorParams, KucoinRawData]):
-
     @staticmethod
     @retry(wait=wait_fixed(0.01), stop=stop_after_attempt(5), reraise=True)
     async def extract_async(
         kucoin_extractor_params: KucoinExtractorParams,
     ) -> AsyncGenerator[KucoinRawData, None]:
-        #
+        # Kucoin requires to get WS details to subscribe to the WS
         async def get_kucoin_ws_details() -> dict[str, Any]:
             async with aiohttp.ClientSession() as sess:
                 async with sess.post(BULLET_URL) as response:
                     data: dict[str, Any] = await response.json()
                     return data["data"]
 
+        # Creating connection string from the returned bullet_data
         bullet_data: dict[str, Any] = await get_kucoin_ws_details()
         ws_endpoint = bullet_data["instanceServers"][0]["endpoint"]
         token: str = bullet_data["token"]
