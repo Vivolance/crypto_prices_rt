@@ -1,0 +1,55 @@
+# === Kafka Producers ===
+
+[kafka.producer.kucoin_raw]
+    bootstrap_servers = "localhost:9092"
+    client_id = "kucoin-raw-producer"
+    acks = "all"
+
+[kafka.producer.binance_raw]
+    bootstrap_servers = "localhost:9092"
+    client_id = "binance-raw-producer"
+    acks = "all"
+
+[kafka.producer.kucoin_transformed]
+    bootstrap_servers = "localhost:9092"
+    client_id = "kucoin-transformed-producer"
+    acks = "all"
+
+[kafka.producer.binance_transformed]
+    bootstrap_servers = "localhost:9092"
+    client_id = "binance-transformed-producer"
+    acks = "all"
+
+# === Kafka Consumers ===
+
+[kafka.consumer.kucoin_raw]
+    bootstrap_servers = "localhost:9092"
+    enable_auto_commit = false
+    client_id = "kucoin-raw-consumer"
+    group_id = "kucoin-raw-consumer-group"
+    auto_offset_reset = "earliest"
+
+[kafka.consumer.binance_raw]
+    bootstrap_servers = "localhost:9092"
+    enable_auto_commit = false
+    client_id = "binance-raw-consumer"
+    group_id = "binance-raw-consumer-group"
+    auto_offset_reset = "earliest"
+
+[kafka.consumer.kucoin_transformed]
+    bootstrap_servers = "localhost:9092"
+    enable_auto_commit = false
+    client_id = "kucoin-transformed-consumer"
+    group_id = "kucoin-transformed-consumer-group"
+    auto_offset_reset = "earliest"
+
+[kafka.consumer.binance_transformed]
+    bootstrap_servers = "localhost:9092"
+    enable_auto_commit = false
+    client_id = "binance-transformed-consumer"
+    group_id = "binance-transformed-consumer-group"
+    auto_offset_reset = "earliest"
+
+[postgres]
+    connection_string = "postgresql+asyncpg://localhost:5432/crypto-prices-rt"
+    # connection_string = "postg
