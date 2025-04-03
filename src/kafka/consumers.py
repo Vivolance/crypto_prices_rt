@@ -11,6 +11,9 @@ from typing import TypeVar, Generic, Any, Type, Optional
 from confluent_kafka import Consumer, Message
 from pydantic import BaseModel
 
+from src.models.binance_model import BinanceRawData, BinanceTransformedData
+from src.models.kucoin_model import KucoinRawData, KucoinTransformedData
+
 ConsumerRecord = TypeVar("ConsumerRecord", bound=BaseModel)
 
 
@@ -70,3 +73,39 @@ class GenericConsumer(Generic[ConsumerRecord]):
     def commit(self) -> None:
         # manually commit the offsets
         self._consumer.commit()
+
+
+class KucoinRawConsumer(GenericConsumer[KucoinRawData]):
+    def __init__(self, consumer_config: dict[str, Any]) -> None:
+        super().__init__(
+            consumer_config=consumer_config,
+            topic_name="kucoin_raw_data",
+            model=KucoinRawData
+        )
+
+
+class BinanceRawConsumer(GenericConsumer[BinanceRawData]):
+    def __init__(self, consumer_config: dict[str, Any]) -> None:
+        super().__init__(
+            consumer_config=consumer_config,
+            topic_name="binance_raw_data",
+            model=BinanceRawData
+        )
+
+
+class KucoinTransformedConsumer(GenericConsumer[KucoinTransformedData]):
+    def __init__(self, consumer_config: dict[str, Any]) -> None:
+        super().__init__(
+            consumer_config=consumer_config,
+            topic_name="kucoin_transformed_data",
+            model=KucoinTransformedData
+        )
+
+
+class BinanceTransformedConsumer(GenericConsumer[BinanceTransformedData]):
+    def __init__(self, consumer_config: dict[str, Any]) -> None:
+        super().__init__(
+            consumer_config=consumer_config,
+            topic_name="binance_transformed_data",
+            model=BinanceTransformedData
+        )
