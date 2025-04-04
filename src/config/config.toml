@@ -52,4 +52,3 @@
 
 [postgres]
     connection_string = "postgresql+asyncpg://localhost:5432/crypto-prices-rt"
-    # connection_string = "postg
