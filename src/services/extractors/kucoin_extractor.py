@@ -8,6 +8,7 @@ from aiohttp import WSMessage
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_fixed
 
+from src.common.generic_extractor import AsyncExtractor
 from src.models.kucoin_model import KucoinRawData
 from src.utils.generic_logger import logger_setup
 
@@ -33,7 +34,7 @@ class KucoinExtractorParams(BaseModel):
     pass
 
 
-class KucoinExtractor(AsyncGenerator[KucoinExtractorParams, KucoinRawData]):
+class KucoinExtractor(AsyncExtractor[KucoinExtractorParams, KucoinRawData]):
     @staticmethod
     @retry(wait=wait_fixed(0.01), stop=stop_after_attempt(5), reraise=True)
     async def extract_async(
