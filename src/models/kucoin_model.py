@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from numpy import double
 from pydantic import BaseModel
 
 
