@@ -3,10 +3,45 @@
 ## Summary Flow
 ![img.png](./images/img.png)
 
+## ===== CHECKPOINT 1 =======
+1. Created Kucoin Websocket
+Payload: firehose of dicts
+{
+"code": "200000",
+"data": {
+  "instanceServers": [
+      {
+          "endpoint": "wss://ws-xxx.kucoin.com/endpoint",
+          "protocol": "websocket",
+          "encrypt": True,
+          "pingInterval": 18000,
+          "pingTimeout": 10000
+      }
+  ],
+  "token": "xxx"
+}
+}
 
-## Extractors
+2. Created Binance Websocket
+Response:
+Payload: list[dict]
+```
+[
+  {
+    "e": "24hrMiniTicker",  // Event type
+    "E": 1672515782136,     // Event time
+    "s": "BNBBTC",          // Symbol
+    "c": "0.0025",          // Close price
+    "o": "0.0010",          // Open price
+    "h": "0.0025",          // High price
+    "l": "0.0010",          // Low price
+    "v": "10000",           // Total traded base asset volume
+    "q": "18"               // Total traded quote asset volume
+  },
+]
+```
 
-### Binance
+### Binance tidbits
 - Takes in a connection string, spins up web socket connection
 - Deserialize JSON -> list[dict] -> list[BinanceRawData]
 Raw Data:
@@ -14,7 +49,7 @@ Raw Data:
 {'e': '24hrMiniTicker', 'E': 1743147448251, 's': 'ETHUSDT', 'c': '1916.44000000', 'o': '2024.24000000', 'h': '2035.92000000', 'l': '1900.00000000', 'v': '518500.55270000', 'q': '1028765226.27080600'}]
 
 
-### Kucoin
+### Kucoin tidbits
 - First fires a REST API using BULLET URL to get confirmation response
 - Filter the response to get token and ws_endpoint
 - Spin up web socket connection with connection_string using token and ws_endpoint obtained
@@ -36,24 +71,72 @@ Raw Data:
 in Kafka can be consistent? If so, what are the criteria for batching? So far, Binance batches a list of all tickers per second, but i do not know
 exactly where Kucoin cutoff is for its entire list of tickers. They both comes in a consistent stream.
 
+Goal: Define a batching logic for Kucoin so it makes sense to call produce(batch) at the right time without wasting 
+resources, introducing latency, or sending too few/too many messages per Kafka write.
+
 Problem:
-- getting different symbols
-- in random order
-- constantly streaming one at a time
-- no indication of when a batch ends
-- multiple similar ticker might come in within a time period
-- ticker may not come in within a time period
+Binance returns a list[dict] while Kucoin returns a firehose of dict.
+Binance is simple as the list[dict] is already batched and ready to be produced to Kafka
+However the discussion lies:
+Option 1: Batch Kucoin results first before producing
+Option 2: Producing it first then batch in the consumer
+
+Option 1 Pros:
+- Fewer overhead, less resources for spinning up as a single message is a batch
+- s3 uploader logic is simpler as it already gets a list[dict] from both data source
+- More efficient for Spark downstream as it is batched already
+
+Option 1 Cons:
+- Needs batching logic inside extractor (SRP?)
+
+Option 2 Pros:
+- Extractor do not require batching logic.
+
+Option 2 Cons:
+- Batching logic required in consumer class (Spark)
+- Easy to overwhelm broker as a single message is a dict, overhead for i/o increases
+- Spark stream consumption is more overwhelmed
 
 Proposal:
 Per-symbol time window batching between kucoin extractor and producer.
 Creates a buffer batch which "batches" the kucoin data coming in by 2 conditions:
-1. Only produce to topic when a symbol has collected 10 messages:
+1. Only produce to topic when a symbol has collected 100 messages:
 2. Produce to topic every 1 second.
 
 This prevents:
 1. Reduces strain on Kafka and kafka only produces when batch is ready
-2. 
+2. Reduces message writes to Kafka, less i/o
+3. Kafka do not have to scan thousands of messages from a topic in a period (needle in a haystack problem)
 
+Conclusion: Option 1
 
-Goal: Define a batching logic for Kucoin so it makes sense to call produce(batch) at the right time without wasting 
-resources, introducing latency, or sending too few/too many messages per Kafka write.
+## ===== CHECKPOINT 2 =======
+1. Created kucoin websocket -> returns firehose of dicts
+2. Created binance websocket -> returns list[dicts]
+3. Serialized 1 and 2 into dataclass and list[dataclass] respectively
+4. Batched 1 into a list[dataclass]
+5. In the produce method, deserialized list[dataclass] into JSONArray
+6. Successfully produced JSONArray to kucoin_raw_topic and binance_raw_topic
+
+Steps to run up till now:
+1. Start Zookeeper by navigating to directory where Kafka is installed
+```commandline
+bin/zookeeper-server-start.sh config/zookeeper.properties
+```
+
+2. Start Kafka by navigating to directory where Kafka is installed
+```commandline
+bin/kafka-server-start.sh config/server.properties
+```
+
+3. Manual consume from a kucoin_raw_data topic to see the messages
+```commandline
+bin/kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic kucoin_raw_data \
+  --from-beginning \
+  --property print.key=true \
+  --property print.value=true \
+  --property print.timestamp=true
+
+```
