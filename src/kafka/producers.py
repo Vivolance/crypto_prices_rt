@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Generic, TypeVar, Optional, Any, Union
+from typing import Generic, TypeVar, Optional, Any
 
 from confluent_kafka import Producer, KafkaError, Message
 from pydantic import BaseModel
@@ -30,24 +30,21 @@ class AbstractProducer(Generic[ProduceMessage]):
         wait=wait_fixed(0.01),
         reraise=True,
     )
-    def produce(self, batch: Union[ProduceMessage, list[ProduceMessage]]) -> None:
+    def produce(self, batch: list[ProduceMessage]) -> None:
         """
-        Takes in a list[dataclass] or dataclass, serialize it and produce
+        Takes in a list[dataclass], serialize it and produce
         """
-        if isinstance(batch, BaseModel):
-            batch = [batch]  # wrap in list
-        elif not isinstance(batch, list):
+        if not isinstance(batch, list):
             raise ValueError("Expected a BaseModel or a list of BaseModels")
         # all message to be produced must be serialized
-        # model.dumps(dataclass -> dict)
-        # json.dumps (dict -> str)
-        serialized_batch: list[str] = [
-            json.dumps(single_item.model_dump()) for single_item in batch
-        ]
-        for message in serialized_batch:
-            self._producer.produce(
-                topic=self._topic_name, value=message, on_delivery=self.log_error
-            )
+        # model.dumps(list[dataclass] -> list[dict])
+        # json.dumps (list[dict] -> str), each str json array is a type list[dict]
+        serialized_batch: str = json.dumps(
+            [single_item.model_dump() for single_item in batch]
+        )
+        self._producer.produce(
+            topic=self._topic_name, value=serialized_batch, on_delivery=self.log_error
+        )
         self._producer.flush()
 
     @staticmethod
@@ -57,9 +54,9 @@ class AbstractProducer(Generic[ProduceMessage]):
         :param msg: Message you produced that failed
         :return:
         """
-        if err is None:
+        if err is not None:
             # Raise Error
-            print(f"Delivery failed for message {msg.key()} : {err}")
+            print(f"Delivery failed for message: {err}")
         else:
             # Optional
             print(
