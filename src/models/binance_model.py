@@ -18,6 +18,6 @@ class BinanceRawData(BaseModel):
 
 class BinanceTransformedData(BaseModel):
     symbol: str
-    price: double
+    price: float
     time: datetime
     source: str
