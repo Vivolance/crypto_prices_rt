@@ -6,21 +6,23 @@
 ## ===== CHECKPOINT 1 =======
 1. Created Kucoin Websocket
 Payload: firehose of dicts
+```
 {
-"code": "200000",
-"data": {
-  "instanceServers": [
-      {
-          "endpoint": "wss://ws-xxx.kucoin.com/endpoint",
-          "protocol": "websocket",
-          "encrypt": True,
-          "pingInterval": 18000,
-          "pingTimeout": 10000
-      }
-  ],
-  "token": "xxx"
-}
-}
+    "topic": "/market/ticker:all",
+    "type": "message",
+    "subject": "BTC-USDT",
+    "data": {
+        "bestAsk": "67218.7",
+        "bestAskSize": "1.92318539",
+        "bestBid": "67218.6",
+        "bestBidSize": "0.01045638",
+        "price": "67220",
+        "sequence": "14691455768",
+        "size": "0.00004316",
+        "time": 1729757723612 //The matching time of the latest transaction
+    }
+}   
+```
 
 2. Created Binance Websocket
 Response:
