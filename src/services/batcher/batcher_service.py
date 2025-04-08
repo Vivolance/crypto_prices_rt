@@ -1,7 +1,9 @@
 import time
 from typing import TypeVar, Generic
 
-SingleMessage = TypeVar("SingleMessage")
+from pydantic import BaseModel
+
+SingleMessage = TypeVar("SingleMessage", bound=BaseModel)
 
 
 class GenericBatcher(Generic[SingleMessage]):
