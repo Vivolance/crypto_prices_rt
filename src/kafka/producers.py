@@ -35,8 +35,8 @@ class AbstractProducer(Generic[ProduceMessage]):
         Takes in a list[dataclass], serialize it and produce
         """
         if not isinstance(batch, list):
-            raise ValueError("Expected a BaseModel or a list of BaseModels")
-        # all message to be produced must be serialized
+            raise ValueError("Expected a list of BaseModels")
+        # all messages to be produced must be serialized
         # model.dumps(list[dataclass] -> list[dict])
         # json.dumps (list[dict] -> str), each str json array is a type list[dict]
         serialized_batch: str = json.dumps(
