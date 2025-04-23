@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 from typing import AsyncGenerator, Any
 
 import aiohttp
@@ -21,13 +22,21 @@ class BinanceExtractorParams(BaseModel):
 
 
 class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceRawData]):
-    @staticmethod
+    def __init__(self):
+        # threading.Event() because we want external threads to trigger stop, not from within the async loop
+        self.stop_event = threading.Event()
+
+    # External callable for tests to stop the session
+    def request_stop(self):
+        self.stop_event.set()
+
     @retry(
         wait=wait_fixed(0.01),  # ~10ms between attempts
         stop=stop_after_attempt(5),  # 5 retries
         reraise=True,
     )
     async def extract_async(
+        self,
         binance_extractor_params: BinanceExtractorParams,
     ) -> AsyncGenerator[list[BinanceRawData], None]:
         connection_string: str = "wss://stream.binance.com:9443/ws/!miniTicker@arr"
@@ -36,21 +45,24 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceRawData]):
                 async with session.ws_connect(connection_string) as ws:
                     ws: ClientWebSocketResponse
                     async for msg in ws:
+                        if self.stop_event.is_set():
+                            print("Stop event received — breaking WebSocket loop.")
+                            break
                         msg: WSMessage
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             msg_string: str = msg.data
                             # Deserialize from json to list[dict]
                             msg_dict: list[dict[str, Any]] = json.loads(msg_string)
-                            # Deserialize from list[dict] into list[BinanceCryptoData], Validation step
+                            # Deserialize from list[dict] into list[BinanceRawData], Validation step
                             binance_ticker_list = [
-                                BinanceRawData.parse_obj(item) for item in msg_dict
+                                BinanceRawData.model_validate(item) for item in msg_dict
                             ]
                             yield binance_ticker_list
                         elif msg.type == aiohttp.WSMsgType.CLOSED:
                             raise ValueError("WebSocket connection closed unexpectedly")
                         elif msg.type == aiohttp.WSMsgType.ERROR:
                             raise ValueError("WebSocket encountered error")
-        except aiohttp.ClientSession as e:
+        except aiohttp.ClientError as e:
             raise Exception(f"Client error occurred: {e}") from e
         except Exception as e:
             raise Exception(f"Unexpected error occurred {e}")
