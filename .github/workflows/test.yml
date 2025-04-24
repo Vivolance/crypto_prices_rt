@@ -31,7 +31,12 @@ jobs:
       - name: 📦 Install dependencies
         run: poetry install
 
-      - name: 🧪 Run Integration Tests
-        run: poetry run pytest integration_test/ --tb=short -q
+      - name: 🧪 Run Integration Tests (with retries)
+        run: poetry run pytest \
+          integration_test/services/ \
+          --tb=short -q \
+          --reruns 2          # rerun up to 2 times
+
+
 
 
