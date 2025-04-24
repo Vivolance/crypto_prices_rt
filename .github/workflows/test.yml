@@ -28,5 +28,8 @@ jobs:
     - name: 📦 Install Dependencies
       run: poetry install --no-root
 
+    - name: ✅ Set PYTHONPATH
+      run: echo "PYTHONPATH=$PWD/src" >> $GITHUB_ENV
+
     - name: 🧪 Run All Integration Tests
       run: poetry run pytest --tb=short -q
