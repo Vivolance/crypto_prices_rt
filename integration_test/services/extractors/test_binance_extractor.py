@@ -1,4 +1,3 @@
-from aiohttp import WSServerHandshakeError, ClientError
 
 from src.services.extractors.binance_extractor import (
     BinanceExtractorParams,
