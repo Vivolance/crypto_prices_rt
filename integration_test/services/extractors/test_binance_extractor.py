@@ -1,3 +1,5 @@
+from aiohttp import WSServerHandshakeError, ClientError
+
 from src.services.extractors.binance_extractor import (
     BinanceExtractorParams,
     BinanceExtractor,
@@ -27,7 +29,12 @@ class TestBinanceExtractorStream:
         extractor.request_stop()
 
         # Wait for the stream to stop and clean up
-        await task
+        try:
+            await task
+        except WSServerHandshakeError as e:
+            pytest.skip(f"CI runner IP blocked by Binance (451): {e}")
+        except ClientError as e:
+            pytest.skip(f"Skipped live test due to network error: {e}")
 
         assert len(results) > 0, "No messages were streamed"
         # use pytest -s in CLI to return stdout
