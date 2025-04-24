@@ -6,7 +6,7 @@ import asyncio
 import pytest
 from src.models.binance_model import BinanceRawData
 
-# Test github actions
+
 class TestBinanceExtractorStream:
     @pytest.mark.integration
     @pytest.mark.asyncio
