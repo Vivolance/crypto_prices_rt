@@ -53,7 +53,16 @@ installed
 
 ## Other Notes
 1. Configure Integration tests to skip Errors such as 451, where the endpoint may
-be blocking github's linux IP to make a WS or REST API to its server due to security concerns
-2. Remove src folder from test directory to prevent github from confusing where the actual
+be blocking Github's linux IP to make a WS or REST API to its server due to security concerns
+2. Remove src folder from test directory to prevent Github from confusing where the actual
 src should be
+3. For installing dependencies, do not use --no-root. We want to install our src as a package into
+the virtualenv as well. This makes your src pacakge in importable packaage for pytests.
+```
+[tool.poetry]
+name = "crypto-prices-rt"
+packages = [
+  { include = "src" }
+]
+```
 
