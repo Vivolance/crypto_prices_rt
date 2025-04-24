@@ -27,8 +27,5 @@ jobs:
     - name: 📦 Install dependencies (no root)
       run: poetry install --no-root
 
-    - name: ✅ Set PYTHONPATH
-      run: echo "PYTHONPATH=$GITHUB_WORKSPACE/src" >> $GITHUB_ENV
-
     - name: 🧪 Run Integration Tests
       run: poetry run pytest --tb=short -q
