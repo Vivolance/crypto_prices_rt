@@ -7,8 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  integration:
-    name: 🔌 Integration Tests
+  integration-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,11 +24,11 @@ jobs:
         curl -sSL https://install.python-poetry.org | python3 -
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: 📦 Install Dependencies
+    - name: 📦 Install dependencies (no root)
       run: poetry install --no-root
 
     - name: ✅ Set PYTHONPATH
-      run: echo "PYTHONPATH=$PWD/src" >> $GITHUB_ENV
+      run: echo "PYTHONPATH=$GITHUB_WORKSPACE/src" >> $GITHUB_ENV
 
-    - name: 🧪 Run All Integration Tests
+    - name: 🧪 Run Integration Tests
       run: poetry run pytest --tb=short -q
