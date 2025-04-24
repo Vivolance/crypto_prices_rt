@@ -3,6 +3,9 @@ name = "crypto-prices-rt"
 version = "0.1.0"
 description = ""
 authors = ["Elson Chan <elsonccjgmail.com>"]
+packages = [
+  { include = "src" }
+]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -49,5 +52,11 @@ explicit_package_bases = true
 exclude = '^(\\.venv|venv|env|\\.g it|node_modules)/'
 
 [tool.pytest.ini_options]
+markers = [
+  "integration: marks tests as integration (use -m integration)",
+]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.poetry.group.dev.dependencies]
+pytest-rerunfailures = "^10.3"

@@ -1,3 +1,5 @@
+from aiohttp import WSServerHandshakeError, ClientError
+
 from src.services.extractors.binance_extractor import (
     BinanceExtractorParams,
     BinanceExtractor,
@@ -6,7 +8,7 @@ import asyncio
 import pytest
 from src.models.binance_model import BinanceRawData
 
-# Test github actions
+
 class TestBinanceExtractorStream:
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -27,7 +29,14 @@ class TestBinanceExtractorStream:
         extractor.request_stop()
 
         # Wait for the stream to stop and clean up
-        await task
+        try:
+            await task
+        except Exception as e:
+            # Detect Binance’s 451 block
+            if "451" in str(e):
+                pytest.skip(f"CI runner IP blocked by Binance (451): {e}")
+            # If it’s some other unexpected error, fail
+            raise
 
         assert len(results) > 0, "No messages were streamed"
         # use pytest -s in CLI to return stdout

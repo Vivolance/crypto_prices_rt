@@ -10,31 +10,26 @@ jobs:
   integration-tests:
     runs-on: ubuntu-latest
 
+    # Make 'src/' importable in all steps and sub‐processes:
+    env:
+      PYTHONPATH: ${{ github.workspace }}/src
+
     steps:
-    - name: ⬇️ Checkout code
-      uses: actions/checkout@v4
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
 
-    - name: 🐍 Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: 📦 Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: 📦 Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    - name: 📦 Install dependencies (no root)
-      run: poetry install --no-root
+      - name: 📦 Install dependencies
+        run: poetry install
 
-    - name: 🧪 Run Integration Tests
-      run: |
-        echo "PYTHONPATH is $PYTHONPATH"
-        echo "Current working directory: $(pwd)"
-        echo "Files in root:"
-        ls -la
-        PYTHONPATH=src poetry run pytest integration_test/ --tb=short -q
-      env:
-        PYTHONPATH: "${{ github.workspace }}/src"
-
-
+      - name: 🧪 Run Integration Tests (with retries)
+        run: poetry run pytest integration_test/ --tb=short -q --reruns 3
