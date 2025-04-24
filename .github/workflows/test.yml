@@ -28,4 +28,5 @@ jobs:
       run: poetry install --no-root
 
     - name: 🧪 Run Integration Tests
-      run: poetry run pytest integration_test/ --tb=short -q
+      run: PYTHONPATH=./src poetry run pytest integration_test/ --tb=short -q
+
