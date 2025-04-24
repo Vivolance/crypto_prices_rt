@@ -24,7 +24,7 @@ class BinanceExtractorParams(BaseModel):
 class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceRawData]):
     def __init__(self):
         # threading.Event() because we want external threads to trigger stop, not from within the async loop
-        self.stop_event = threading.Event()
+        self.stop_event: threading.Event = threading.Event()
 
     # External callable for tests to stop the session
     def request_stop(self):
