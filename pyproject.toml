@@ -3,6 +3,9 @@ name = "crypto-prices-rt"
 version = "0.1.0"
 description = ""
 authors = ["Elson Chan <elsonccjgmail.com>"]
+packages = [
+  { include = "src" }
+]
 readme = "README.md"
 
 [tool.poetry.dependencies]
