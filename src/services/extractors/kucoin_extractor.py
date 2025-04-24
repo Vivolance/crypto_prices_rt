@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 from typing import AsyncGenerator, Any
 
 import aiohttp
@@ -27,30 +28,43 @@ logger: logging.Logger = logging.Logger(__name__)
 logger_setup(logger)
 
 
-BULLET_URL: str = "https://api.kucoin.com/api/v1/bullet-public"
-
-
 class KucoinExtractorParams(BaseModel):
     pass
 
 
-class KucoinExtractor(AsyncExtractor[KucoinExtractorParams, KucoinRawData]):
+class KucoinWSData:
     @staticmethod
     @retry(wait=wait_fixed(0.01), stop=stop_after_attempt(5), reraise=True)
-    async def extract_async(
-        kucoin_extractor_params: KucoinExtractorParams,
-    ) -> AsyncGenerator[KucoinRawData, None]:
-        # Kucoin requires to get WS details to subscribe to the WS
-        async def get_kucoin_ws_details() -> dict[str, Any]:
+    async def get_kucoin_ws_details() -> dict[str, Any]:
+        BULLET_URL: str = "https://api.kucoin.com/api/v1/bullet-public"
+        try:
             async with aiohttp.ClientSession() as sess:
                 async with sess.post(BULLET_URL) as response:
                     data: dict[str, Any] = await response.json()
-                    return data["data"]
+                    return data
+        except aiohttp.ClientError as e:
+            logger.error(e)
+            raise e
+
+
+class KucoinExtractor(AsyncExtractor[KucoinExtractorParams, KucoinRawData]):
+    def __init__(self):
+        self.stop_event: threading.Event = threading.Event()
+
+    def request_stop(self):
+        self.stop_event.set()
+
+    @retry(wait=wait_fixed(0.01), stop=stop_after_attempt(5), reraise=True)
+    async def extract_async(
+        self,
+        kucoin_extractor_params: KucoinExtractorParams,
+    ) -> AsyncGenerator[KucoinRawData, None]:
+        # Kucoin requires to get WS details to subscribe to the WS
 
         # Creating connection string from the returned bullet_data
-        bullet_data: dict[str, Any] = await get_kucoin_ws_details()
-        ws_endpoint = bullet_data["instanceServers"][0]["endpoint"]
-        token: str = bullet_data["token"]
+        bullet_data: dict[str, Any] = await KucoinWSData.get_kucoin_ws_details()
+        ws_endpoint = bullet_data["data"]["instanceServers"][0]["endpoint"]
+        token: str = bullet_data["data"]["token"]
         connection_string: str = f"{ws_endpoint}?token={token}"
 
         try:
@@ -66,13 +80,16 @@ class KucoinExtractor(AsyncExtractor[KucoinExtractorParams, KucoinRawData]):
                     await ws.send_json(subscribe_message)
                     print("Subscription message sent.")
                     async for msg in ws:
+                        if self.stop_event.is_set():
+                            print("Stop event received — breaking WebSocket loop.")
+                            break
                         msg: WSMessage
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             msg_string: str = msg.data
                             msg_dict: dict[str, Any] = json.loads(msg_string)
                             # To filter the welcome message
                             if "subject" in msg_dict and "data" in msg_dict:
-                                kucoin_ticker = KucoinRawData.parse_obj(msg_dict)
+                                kucoin_ticker = KucoinRawData.model_validate(msg_dict)
                                 # TODO: To batch or not to batch?
                                 yield kucoin_ticker
                         elif msg.type == aiohttp.WSMsgType.CLOSED:
