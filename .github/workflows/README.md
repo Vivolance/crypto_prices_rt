@@ -1,18 +1,27 @@
-name: 🔗 Run Integration Tests
+# Github Actions
 
+## Entry
+
+1. Set on what actions github will trigeer a check
+```
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+```
 
-jobs:
+## Jobs
+Specify the jobs to be executed. Steps are ordered, meaning the succeeding steps
+must have all the requirements ready, any preceding dependencies should be already
+installed
+### integration-tests
+```
   integration-tests:
     runs-on: ubuntu-latest
-
-    # Make 'src/' importable in all steps and sub‐processes:
+    
     env:
-      PYTHONPATH: ${{ github.workspace }}/src
+        PYTHONPATH: ${{ github.workspace }}/src
 
     steps:
       # Clones your repository into the runner so future steps can access your files.
@@ -27,7 +36,9 @@ jobs:
 
       - name: 📦 Install Poetry
         run: |
+          # install poetry and input the output to python3
           curl -sSL https://install.python-poetry.org | python3 -
+          # makes the installed poetry command available to all later steps in your workflow.
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: 📦 Install dependencies
@@ -36,3 +47,13 @@ jobs:
       - name: 🧪 Run Integration Tests (with retries)
         # short tracebacks on failure, -q: quiet mode (fewer dots, cleaner output).
         run: poetry run pytest integration_test/ --tb=short -q --reruns 3
+
+```
+
+
+## Other Notes
+1. Configure Integration tests to skip Errors such as 451, where the endpoint may
+be blocking github's linux IP to make a WS or REST API to its server due to security concerns
+2. Remove src folder from test directory to prevent github from confusing where the actual
+src should be
+
