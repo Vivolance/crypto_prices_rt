@@ -10,6 +10,7 @@ from src.services.extractors.kucoin_extractor import (
 
 
 class TestKucoinWSData:
+    @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_ws_bullet_data(self):
         result = await KucoinWSData.get_kucoin_ws_details()
@@ -25,6 +26,7 @@ class TestKucoinWSData:
 
 
 class TestKucoinExtractorStream:
+    @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_kucoin_stream(self):
         extractor = KucoinExtractor()

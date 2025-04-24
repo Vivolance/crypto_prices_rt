@@ -8,6 +8,7 @@ from src.models.binance_model import BinanceRawData
 
 
 class TestBinanceExtractorStream:
+    @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_extractor_stream(self):
         extractor = BinanceExtractor()
