@@ -15,9 +15,11 @@ jobs:
       PYTHONPATH: ${{ github.workspace }}/src
 
     steps:
+      # Clones your repository into the runner so future steps can access your files.
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
+      # Installs Python 3.11 on the GitHub runner, ready for Poetry and pytest to use.
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
@@ -32,4 +34,5 @@ jobs:
         run: poetry install
 
       - name: 🧪 Run Integration Tests (with retries)
+        # short tracebacks on failure, -q: quiet mode (fewer dots, cleaner output).
         run: poetry run pytest integration_test/ --tb=short -q --reruns 3
