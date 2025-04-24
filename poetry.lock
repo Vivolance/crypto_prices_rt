@@ -1785,6 +1785,21 @@ docs = ["sphinx (>=5.3)", "sphinx-rtd-theme (>=1)"]
 testing = ["coverage (>=6.2)", "hypothesis (>=5.7.1)"]
 
 [[package]]
+name = "pytest-rerunfailures"
+version = "10.3"
+description = "pytest plugin to re-run tests to eliminate flaky failures"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pytest-rerunfailures-10.3.tar.gz", hash = "sha256:d8244d799f89a6edb5e57301ddaeb3b6f10d6691638d51e80b371311592e28c6"},
+    {file = "pytest_rerunfailures-10.3-py3-none-any.whl", hash = "sha256:6be6f96510bf94b54198bf15bc5568fe2cdff88e83875912e22d29810acf65ff"},
+]
+
+[package.dependencies]
+packaging = ">=17.1"
+pytest = ">=5.3"
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 description = "Extensions to the standard Python datetime module"
@@ -2379,4 +2394,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "797f519a4f1d0266567b80c78d651b459bc813468fba4faa125d64fb9cdc4574"
+content-hash = "a1c552856b6a2043135f97b579c3ed165ecf94580669d4ccc61cf929f72f18ec"
