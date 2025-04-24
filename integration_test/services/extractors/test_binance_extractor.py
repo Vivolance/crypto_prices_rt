@@ -31,10 +31,12 @@ class TestBinanceExtractorStream:
         # Wait for the stream to stop and clean up
         try:
             await task
-        except WSServerHandshakeError as e:
-            pytest.skip(f"CI runner IP blocked by Binance (451): {e}")
-        except ClientError as e:
-            pytest.skip(f"Skipped live test due to network error: {e}")
+        except Exception as e:
+            # Detect Binance’s 451 block
+            if "451" in str(e):
+                pytest.skip(f"CI runner IP blocked by Binance (451): {e}")
+            # If it’s some other unexpected error, fail
+            raise
 
         assert len(results) > 0, "No messages were streamed"
         # use pytest -s in CLI to return stdout
