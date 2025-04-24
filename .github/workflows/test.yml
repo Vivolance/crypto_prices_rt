@@ -33,7 +33,7 @@ jobs:
 
       - name: 🧪 Run Integration Tests (with retries)
         run: poetry run pytest \
-          integration_test \
+          integration_test/ \
           --tb=short -q \
           --reruns 3          # rerun up to 2 times
 
