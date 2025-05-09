@@ -20,3 +20,4 @@ class BinanceTransformedData(BaseModel):
     price: float
     time: datetime
     source: str
+    created_at: datetime
