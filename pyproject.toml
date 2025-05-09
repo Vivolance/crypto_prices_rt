@@ -39,6 +39,7 @@ datetime = "^5.5"
 toml = "^0.10.2"
 pytest = "^8.3.5"
 pytest-asyncio = "^0.26.0"
+dotenv = "^0.9.9"
 
 [build-system]
 requires = ["poetry-core"]
