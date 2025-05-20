@@ -7,7 +7,7 @@ SingleMessage = TypeVar("SingleMessage", bound=BaseModel)
 
 
 class GenericBatcher(Generic[SingleMessage]):
-    def __init__(self, batch_size: int = 100, batch_timeout_s: int = 1):
+    def __init__(self, batch_size: int, batch_timeout_s: int):
         self._batch_start: float = -1
         self._batch: list[SingleMessage] = []
         self._batch_size: int = batch_size
