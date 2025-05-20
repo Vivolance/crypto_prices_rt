@@ -10,7 +10,7 @@ kucoin_table: Table = Table(
     Column("price", FLOAT, nullable=False),
     Column("time", DateTime, nullable=False),
     Column("source", TEXT, nullable=False),
-    Column("created_at", DateTime, nullable=False)
+    Column("created_at", DateTime, nullable=False),
 )
 """
 
@@ -24,5 +24,5 @@ binance_table: Table = Table(
     Column("price", FLOAT, nullable=False),
     Column("time", DateTime, nullable=False),
     Column("source", TEXT, nullable=False),
-    Column("created_at", DateTime, nullable=False)
+    Column("created_at", DateTime, nullable=False),
 )
