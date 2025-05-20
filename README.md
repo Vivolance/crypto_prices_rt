@@ -67,6 +67,17 @@ bin/kafka-console-consumer.sh \
   --property print.timestamp=true
 ```
 
+4. Spinning up Minio, alternative S3 to AWS.
+```commandline
+docker run -d --name minio \
+  -p 9000:9000 \
+  -p 9001:9001 \
+  -e MINIO_ROOT_USER=admin \
+  -e MINIO_ROOT_PASSWORD=password123 \
+  -v ~/minio-data:/data \
+  quay.io/minio/minio server /data --console-address ":9001"
+```
+
 ### Other Issues
 1. Data will be missing whenever web socket is closed. WebSocket API cannot retrieve historical data.
 Solution: To add a non-realtime pipeline to ingest missing data
