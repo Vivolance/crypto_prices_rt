@@ -1,4 +1,3 @@
-
 from src.services.extractors.binance_extractor import (
     BinanceExtractorParams,
     BinanceExtractor,
