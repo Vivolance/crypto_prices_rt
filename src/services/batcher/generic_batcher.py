@@ -26,7 +26,10 @@ class GenericBatcher(Generic[SingleMessage]):
         """
         Check if the batch is ready to be flush and produced
         """
+        # Set to true when batch size is hit
         hit_size: bool = len(self._batch) >= self._batch_size
+
+        # Set to true when timeout is hit
         hit_timeout: bool = (
             self._batch_start > 0
             and (time.perf_counter() - self._batch_start) >= self._batch_timeout_s
