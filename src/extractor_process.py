@@ -1,11 +1,12 @@
 import asyncio
 import logging
+from datetime import datetime
 from typing import Any
 import toml
 
 from src.kafka.producers import RawKucoinProducer, RawBinanceProducer
 from src.models.kucoin_model import KucoinRawData
-from src.services.batcher.batcher_service import GenericBatcher
+from src.services.batcher.generic_batcher import GenericBatcher
 from src.services.extractors.binance_extractor import (
     BinanceExtractor,
     BinanceExtractorParams,
@@ -14,31 +15,28 @@ from src.services.extractors.kucoin_extractor import (
     KucoinExtractor,
     KucoinExtractorParams,
 )
+from src.services.loaders.s3_uploader import RawS3Uploader
+from src.services.loaders.s3_uploader_threaded import RawS3UploaderThreaded
 from src.utils.generic_logger import logger_setup
 
 logger: logging.Logger = logging.Logger(__name__)
 logger_setup(logger)
 
 
-BATCH_SIZE: int = 100
-BATCH_TIMEOUT: int = 1
-
-
 class RawExtractorProcess:
     """
-    This is a high level orchestrator that deals with:
+    This is a high level orchestrator that is responsible for:
     1. Calling extract on binance
     2. Calling extract on kucoin
     3. Batcher that batches kucoin
-    4. RawKucoinProducer
-    5. RawBinanceProducer
+    4. Producing by RawKucoinProducer
+    5. Producing by RawBinanceProducer
+    6. Spinning up S3Uploader as background thread
     """
 
     def __init__(
         self,
         producer_config: dict[str, Any],
-        batch_size: int = 50,
-        batch_timeoust_s: int = 1,
     ) -> None:
         kucoin_kafka_config = producer_config["kafka"]["producer"]["kucoin_raw"]
         binance_kafka_config = producer_config["kafka"]["producer"]["binance_raw"]
@@ -49,7 +47,7 @@ class RawExtractorProcess:
             key.replace("_", "."): value for key, value in binance_kafka_config.items()
         }
         self._kucoin_batcher = GenericBatcher[KucoinRawData](
-            batch_size=batch_size, batch_timeout_s=batch_timeoust_s
+            batch_size=50, batch_timeout_s=1
         )
         self._kucoin_producer = RawKucoinProducer(
             producer_config=kucoin_formatted_producer_config
@@ -59,6 +57,7 @@ class RawExtractorProcess:
         )
         self._kucoin_extractor = KucoinExtractor()
         self._binance_extractor = BinanceExtractor()
+        self._s3_uploader = RawS3UploaderThreaded(RawS3Uploader())
 
     async def _run_kucoin_ws(self) -> None:
         async for record in self._kucoin_extractor.extract_async(
@@ -68,19 +67,38 @@ class RawExtractorProcess:
             if self._kucoin_batcher.batch_ready():
                 batch: list[KucoinRawData] = self._kucoin_batcher.get_batch()
                 self._kucoin_producer.produce(batch)
+
+                # Enqueue upload to S3 uploader
+                self._s3_uploader.submit_upload(
+                    source="kucoin",
+                    records=[record.model_dump() for record in batch],
+                    timestamp=datetime.utcnow(),
+                )
                 self._kucoin_batcher.reset_batch()
 
     async def _run_binance_ws(self) -> None:
-        async for batch in self._binance_extractor.extract_async(
+        async for record in self._binance_extractor.extract_async(
             BinanceExtractorParams()
         ):
-            self._binance_producer.produce(batch)
+            self._binance_producer.produce(record)
+
+            # Enqueue upload to S3 uploader
+            records = [single_record.model_dump() for single_record in record]
+            if records:  # Only enqueue upload if non-empty
+                self._s3_uploader.submit_upload(
+                    source="binance",
+                    records=records,
+                    timestamp=datetime.utcnow(),
+                )
 
     async def start(self) -> None:
         """
         Starts the Kucoin + Binance extraction pipelines concurrently.
         """
         print("Extractor Process Started")
+        # Start S3 uploading process
+        await self._s3_uploader.start()
+        # Start Extraction
         await asyncio.gather(
             self._run_kucoin_ws(),
             self._run_binance_ws(),
