@@ -1,9 +1,14 @@
+import logging
 from queue import Queue, Empty
 from threading import Thread, Event
 
 from src.models.s3_batch_item import S3BatchItem
 from src.services.batcher.generic_batcher import GenericBatcher
 from src.services.loaders.s3_uploader import S3Uploader
+from src.utils.generic_logger import logger_setup
+
+logger: logging.Logger = logging.Logger(__name__)
+logger_setup(logger)
 
 
 class S3UploaderThread(Thread):
