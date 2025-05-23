@@ -1,8 +1,14 @@
 import json
+import logging
 import os
 from datetime import datetime
 
 import boto3
+
+from src.utils.generic_logger import logger_setup
+
+logger: logging.Logger = logging.Logger(__name__)
+logger_setup(logger)
 
 
 class S3Uploader:
