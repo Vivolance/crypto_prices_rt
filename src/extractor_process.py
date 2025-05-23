@@ -1,8 +1,10 @@
 import asyncio
 import logging
 from datetime import datetime
+from queue import Queue
 from typing import Any
 import toml
+from dotenv import load_dotenv
 
 from src.kafka.producers import RawKucoinProducer, RawBinanceProducer
 from src.models.kucoin_model import KucoinRawData
@@ -15,8 +17,8 @@ from src.services.extractors.kucoin_extractor import (
     KucoinExtractor,
     KucoinExtractorParams,
 )
-from src.services.loaders.s3_uploader import RawS3Uploader
-from src.services.loaders.s3_uploader_threaded import RawS3UploaderThreaded
+from src.services.loaders.s3_uploader import S3Uploader
+from src.services.loaders.s3_uploader_thread import S3UploaderThread
 from src.utils.generic_logger import logger_setup
 
 logger: logging.Logger = logging.Logger(__name__)
@@ -57,7 +59,13 @@ class RawExtractorProcess:
         )
         self._kucoin_extractor = KucoinExtractor()
         self._binance_extractor = BinanceExtractor()
-        self._s3_uploader = RawS3UploaderThreaded(RawS3Uploader())
+        self._s3_queue = Queue()
+        self._s3_uploader_thread = S3UploaderThread(
+            queue=self._s3_queue,
+            uploader=S3Uploader(),
+            batch_size=99999999,
+            batch_timeout_s=10,
+        )
 
     async def _run_kucoin_ws(self) -> None:
         async for record in self._kucoin_extractor.extract_async(
@@ -68,11 +76,13 @@ class RawExtractorProcess:
                 batch: list[KucoinRawData] = self._kucoin_batcher.get_batch()
                 self._kucoin_producer.produce(batch)
 
-                # Enqueue upload to S3 uploader
-                self._s3_uploader.submit_upload(
-                    source="kucoin",
-                    records=[record.model_dump() for record in batch],
-                    timestamp=datetime.utcnow(),
+                # Enqueue batch for S3 Upload
+                self._s3_queue.put(
+                    (
+                        [record.model_dump() for record in batch],
+                        datetime.utcnow(),
+                        "kucoin",
+                    )
                 )
                 self._kucoin_batcher.reset_batch()
 
@@ -82,30 +92,30 @@ class RawExtractorProcess:
         ):
             self._binance_producer.produce(record)
 
-            # Enqueue upload to S3 uploader
-            records = [single_record.model_dump() for single_record in record]
-            if records:  # Only enqueue upload if non-empty
-                self._s3_uploader.submit_upload(
-                    source="binance",
-                    records=records,
-                    timestamp=datetime.utcnow(),
-                )
+            # Enqueue batch for S3 Upload
+            batch = [r.model_dump() for r in record]
+            self._s3_queue.put((batch, datetime.utcnow(), "binance"))
 
     async def start(self) -> None:
         """
         Starts the Kucoin + Binance extraction pipelines concurrently.
         """
         print("Extractor Process Started")
-        # Start S3 uploading process
-        await self._s3_uploader.start()
-        # Start Extraction
-        await asyncio.gather(
-            self._run_kucoin_ws(),
-            self._run_binance_ws(),
-        )
+        self._s3_uploader_thread.start()
+        try:
+            # Start Extraction
+            await asyncio.gather(
+                self._run_kucoin_ws(),
+                self._run_binance_ws(),
+            )
+        finally:
+            self._s3_uploader_thread.stop()
+            self._s3_uploader_thread.join()
+            print("Extractor Process Stopped and S3UploaderThread joined.")
 
 
 if __name__ == "__main__":
+    load_dotenv()
     try:
         config: dict[str, Any] = toml.load("src/config/config.toml")
         # print("Producer config passed to Kafka:", config)
