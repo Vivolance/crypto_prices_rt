@@ -92,13 +92,13 @@ class RawExtractorProcess:
             print(f"[Kucoin] ERROR (outer): {e}")
 
     async def _run_binance_ws(self) -> None:
-        async for record in self._binance_extractor.extract_async(
+        async for records in self._binance_extractor.extract_async(
             BinanceExtractorParams()
         ):
-            self._binance_producer.produce(record)
+            self._binance_producer.produce(records)
 
             # Enqueue batch for S3 Upload
-            batch = [r.model_dump() for r in record]
+            batch = [record.model_dump() for record in records]
             self._s3_queue.put((batch, datetime.utcnow(), "binance"))
 
     async def start(self) -> None:
