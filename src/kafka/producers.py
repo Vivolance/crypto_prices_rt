@@ -43,22 +43,16 @@ class AbstractProducer(Generic[ProduceMessage]):
             [single_item.model_dump() for single_item in batch]
         )
         self._producer.produce(
-            topic=self._topic_name, value=serialized_batch, on_delivery=self.log_error
+            topic=self._topic_name, value=serialized_batch, on_delivery=self.log_message
         )
         self._producer.flush()
 
     @staticmethod
-    def log_error(err: Optional[KafkaError], msg: Message) -> None:
-        """
-        :param err: The KafkaError to log
-        :param msg: Message you produced that failed
-        :return:
-        """
+    def log_message(err: Optional[KafkaError], msg: Message) -> None:
         if err is not None:
             # Raise Error
             print(f"Delivery failed for message: {err}")
         else:
-            # Optional
             print(
                 f"Message delivered to {msg.topic()} [{msg.partition()}] at offset {msg.offset()}"
             )

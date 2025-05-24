@@ -89,7 +89,9 @@ class KucoinExtractor(AsyncExtractor[KucoinExtractorParams, KucoinRawData]):
                                 msg_dict: dict[str, Any] = json.loads(msg_string)
                                 # To filter the welcome message
                                 if "subject" in msg_dict and "data" in msg_dict:
-                                    kucoin_ticker = KucoinRawData.model_validate(msg_dict)
+                                    kucoin_ticker = KucoinRawData.model_validate(
+                                        msg_dict
+                                    )
                                     yield kucoin_ticker
                             elif msg.type == aiohttp.WSMsgType.CLOSED:
                                 raise ValueError("WebSocket connection closed.")
