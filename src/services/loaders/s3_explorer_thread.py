@@ -4,16 +4,16 @@ from threading import Thread, Event
 
 from src.models.s3_batch_item import S3BatchItem
 from src.services.batcher.generic_batcher import GenericBatcher
-from src.services.loaders.s3_uploader import S3Uploader
+from src.services.loaders.s3_explorer import S3Explorer
 from src.utils.generic_logger import logger_setup
 
 logger: logging.Logger = logging.Logger(__name__)
 logger_setup(logger)
 
 
-class S3UploaderThread(Thread):
+class S3ExplorerThread(Thread):
     def __init__(
-        self, queue: Queue, uploader: S3Uploader, batch_size: int, batch_timeout_s: int
+        self, queue: Queue, uploader: S3Explorer, batch_size: int, batch_timeout_s: int
     ) -> None:
         """
         Background thread that batches and uploads to S3
@@ -21,7 +21,7 @@ class S3UploaderThread(Thread):
         super().__init__()
         self._queue: Queue = queue
         self._shutdown_event: Event = Event()
-        self._uploader: S3Uploader = uploader
+        self._uploader: S3Explorer = uploader
         self._batchers: dict[str, GenericBatcher[S3BatchItem]] = {
             "kucoin": GenericBatcher(batch_size, batch_timeout_s),
             "binance": GenericBatcher(batch_size, batch_timeout_s),

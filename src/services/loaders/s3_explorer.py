@@ -11,7 +11,7 @@ logger: logging.Logger = logging.Logger(__name__)
 logger_setup(logger)
 
 
-class S3Uploader:
+class S3Explorer:
     """
     Handles uploading of batched raw data to Minio. Uploads raw data stream from
     kucoin and binance.
