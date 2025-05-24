@@ -56,11 +56,14 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceRawData]):
                                 msg_dict: list[dict[str, Any]] = json.loads(msg_string)
                                 # Deserialize from list[dict] into list[BinanceRawData], Validation step
                                 binance_ticker_list = [
-                                    BinanceRawData.model_validate(item) for item in msg_dict
+                                    BinanceRawData.model_validate(item)
+                                    for item in msg_dict
                                 ]
                                 yield binance_ticker_list
                             elif msg.type == aiohttp.WSMsgType.CLOSED:
-                                raise ValueError("WebSocket connection closed unexpectedly")
+                                raise ValueError(
+                                    "WebSocket connection closed unexpectedly"
+                                )
                             elif msg.type == aiohttp.WSMsgType.ERROR:
                                 raise ValueError("WebSocket encountered error")
                 print("WARNING: WebSocket session ended, will retry after short delay.")

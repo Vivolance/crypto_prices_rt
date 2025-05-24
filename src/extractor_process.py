@@ -17,8 +17,8 @@ from src.services.extractors.kucoin_extractor import (
     KucoinExtractor,
     KucoinExtractorParams,
 )
-from src.services.loaders.s3_uploader import S3Uploader
-from src.services.loaders.s3_uploader_thread import S3UploaderThread
+from src.services.loaders.s3_explorer import S3Explorer
+from src.services.loaders.s3_explorer_thread import S3ExplorerThread
 from src.utils.generic_logger import logger_setup
 
 logger: logging.Logger = logging.Logger(__name__)
@@ -60,31 +60,36 @@ class RawExtractorProcess:
         self._kucoin_extractor = KucoinExtractor()
         self._binance_extractor = BinanceExtractor()
         self._s3_queue = Queue()
-        self._s3_uploader_thread = S3UploaderThread(
+        self._s3_uploader_thread = S3ExplorerThread(
             queue=self._s3_queue,
-            uploader=S3Uploader(),
+            uploader=S3Explorer(),
             batch_size=99999999,
-            batch_timeout_s=10,
+            batch_timeout_s=60,
         )
 
     async def _run_kucoin_ws(self) -> None:
-        async for record in self._kucoin_extractor.extract_async(
-            KucoinExtractorParams()
-        ):
-            self._kucoin_batcher.append(record)
-            if self._kucoin_batcher.batch_ready():
-                batch: list[KucoinRawData] = self._kucoin_batcher.get_batch()
-                self._kucoin_producer.produce(batch)
-
-                # Enqueue batch for S3 Upload
-                self._s3_queue.put(
-                    (
-                        [record.model_dump() for record in batch],
-                        datetime.utcnow(),
-                        "kucoin",
-                    )
-                )
-                self._kucoin_batcher.reset_batch()
+        try:
+            async for record in self._kucoin_extractor.extract_async(
+                KucoinExtractorParams()
+            ):
+                try:
+                    self._kucoin_batcher.append(record)
+                    if self._kucoin_batcher.batch_ready():
+                        batch: list[KucoinRawData] = self._kucoin_batcher.get_batch()
+                        self._kucoin_producer.produce(batch)
+                        self._s3_queue.put(
+                            (
+                                [record.model_dump() for record in batch],
+                                datetime.utcnow(),
+                                "kucoin",
+                            )
+                        )
+                        self._kucoin_batcher.reset_batch()
+                except Exception as e:
+                    print(f"[Kucoin] ERROR (inner): {e}")
+            print("[Kucoin] Kucoin extraction loop exited.")
+        except Exception as e:
+            print(f"[Kucoin] ERROR (outer): {e}")
 
     async def _run_binance_ws(self) -> None:
         async for record in self._binance_extractor.extract_async(
