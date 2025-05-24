@@ -49,6 +49,7 @@ class KucoinWSData:
 
 class KucoinExtractor(AsyncExtractor[KucoinExtractorParams, KucoinRawData]):
     def __init__(self):
+        # threading.Event() because we want external threads to trigger stop, not from within the async loop
         self.stop_event: threading.Event = threading.Event()
 
     def request_stop(self):
