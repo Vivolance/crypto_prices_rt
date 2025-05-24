@@ -60,45 +60,47 @@ class KucoinExtractor(AsyncExtractor[KucoinExtractorParams, KucoinRawData]):
         kucoin_extractor_params: KucoinExtractorParams,
     ) -> AsyncGenerator[KucoinRawData, None]:
         # Kucoin requires to get WS details to subscribe to the WS
-
         # Creating connection string from the returned bullet_data
-        bullet_data: dict[str, Any] = await KucoinWSData.get_kucoin_ws_details()
-        ws_endpoint = bullet_data["data"]["instanceServers"][0]["endpoint"]
-        token: str = bullet_data["data"]["token"]
-        connection_string: str = f"{ws_endpoint}?token={token}"
+        while not self.stop_event.is_set():
+            try:
+                bullet_data: dict[str, Any] = await KucoinWSData.get_kucoin_ws_details()
+                ws_endpoint = bullet_data["data"]["instanceServers"][0]["endpoint"]
+                token: str = bullet_data["data"]["token"]
+                connection_string: str = f"{ws_endpoint}?token={token}"
 
-        try:
-            async with aiohttp.ClientSession() as sess:
-                async with sess.ws_connect(connection_string) as ws:
-                    # Subscribe to the ticker channel for specific products
-                    subscribe_message = {
-                        "id": "1",  # Unique identifier for the subscription.
-                        "type": "subscribe",
-                        "topic": "/market/ticker:all",  # Global ticker feed for all trading pairs.
-                        "response": True,  # Ask for a confirmation response.
-                    }
-                    await ws.send_json(subscribe_message)
-                    print("Subscription message sent.")
-                    async for msg in ws:
-                        if self.stop_event.is_set():
-                            print("Stop event received — breaking WebSocket loop.")
-                            break
-                        msg: WSMessage
-                        if msg.type == aiohttp.WSMsgType.TEXT:
-                            msg_string: str = msg.data
-                            msg_dict: dict[str, Any] = json.loads(msg_string)
-                            # To filter the welcome message
-                            if "subject" in msg_dict and "data" in msg_dict:
-                                kucoin_ticker = KucoinRawData.model_validate(msg_dict)
-                                yield kucoin_ticker
-                        elif msg.type == aiohttp.WSMsgType.CLOSED:
-                            raise ValueError("WebSocket connection closed.")
-                        elif msg.type == aiohttp.WSMsgType.ERROR:
-                            raise ValueError("WebSocket encountered an error.")
-        except aiohttp.ClientError as e:
-            raise Exception(f"Client error occurred: {e}") from e
-        except Exception as e:
-            raise Exception(f"Unexpected error occurred: {e}") from e
+                async with aiohttp.ClientSession() as sess:
+                    async with sess.ws_connect(connection_string) as ws:
+                        # Subscribe to the ticker channel for specific products
+                        subscribe_message = {
+                            "id": "1",  # Unique identifier for the subscription.
+                            "type": "subscribe",
+                            "topic": "/market/ticker:all",  # Global ticker feed for all trading pairs.
+                            "response": True,  # Ask for a confirmation response.
+                        }
+                        await ws.send_json(subscribe_message)
+                        print("Subscription message sent.")
+                        async for msg in ws:
+                            if self.stop_event.is_set():
+                                print("Stop event received — breaking WebSocket loop.")
+                                break
+                            msg: WSMessage
+                            if msg.type == aiohttp.WSMsgType.TEXT:
+                                msg_string: str = msg.data
+                                msg_dict: dict[str, Any] = json.loads(msg_string)
+                                # To filter the welcome message
+                                if "subject" in msg_dict and "data" in msg_dict:
+                                    kucoin_ticker = KucoinRawData.model_validate(msg_dict)
+                                    yield kucoin_ticker
+                            elif msg.type == aiohttp.WSMsgType.CLOSED:
+                                raise ValueError("WebSocket connection closed.")
+                            elif msg.type == aiohttp.WSMsgType.ERROR:
+                                raise ValueError("WebSocket encountered an error.")
+                print("WARNING: WebSocket session ended, will retry after short delay.")
+                await asyncio.sleep(1)
+            except aiohttp.ClientError as e:
+                raise Exception(f"Client error occurred: {e}") from e
+            except Exception as e:
+                raise Exception(f"Unexpected error occurred: {e}") from e
 
 
 async def main() -> None:

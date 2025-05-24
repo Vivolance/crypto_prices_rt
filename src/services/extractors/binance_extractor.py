@@ -40,32 +40,35 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceRawData]):
         binance_extractor_params: BinanceExtractorParams,
     ) -> AsyncGenerator[list[BinanceRawData], None]:
         connection_string: str = "wss://stream.binance.com:9443/ws/!miniTicker@arr"
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.ws_connect(connection_string) as ws:
-                    ws: ClientWebSocketResponse
-                    async for msg in ws:
-                        if self.stop_event.is_set():
-                            print("Stop event received — breaking WebSocket loop.")
-                            break
-                        msg: WSMessage
-                        if msg.type == aiohttp.WSMsgType.TEXT:
-                            msg_string: str = msg.data
-                            # Deserialize from json to list[dict]
-                            msg_dict: list[dict[str, Any]] = json.loads(msg_string)
-                            # Deserialize from list[dict] into list[BinanceRawData], Validation step
-                            binance_ticker_list = [
-                                BinanceRawData.model_validate(item) for item in msg_dict
-                            ]
-                            yield binance_ticker_list
-                        elif msg.type == aiohttp.WSMsgType.CLOSED:
-                            raise ValueError("WebSocket connection closed unexpectedly")
-                        elif msg.type == aiohttp.WSMsgType.ERROR:
-                            raise ValueError("WebSocket encountered error")
-        except aiohttp.ClientError as e:
-            raise Exception(f"Client error occurred: {e}") from e
-        except Exception as e:
-            raise Exception(f"Unexpected error occurred {e}")
+        while not self.stop_event.is_set():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.ws_connect(connection_string) as ws:
+                        ws: ClientWebSocketResponse
+                        async for msg in ws:
+                            if self.stop_event.is_set():
+                                print("Stop event received — breaking WebSocket loop.")
+                                break
+                            msg: WSMessage
+                            if msg.type == aiohttp.WSMsgType.TEXT:
+                                msg_string: str = msg.data
+                                # Deserialize from json to list[dict]
+                                msg_dict: list[dict[str, Any]] = json.loads(msg_string)
+                                # Deserialize from list[dict] into list[BinanceRawData], Validation step
+                                binance_ticker_list = [
+                                    BinanceRawData.model_validate(item) for item in msg_dict
+                                ]
+                                yield binance_ticker_list
+                            elif msg.type == aiohttp.WSMsgType.CLOSED:
+                                raise ValueError("WebSocket connection closed unexpectedly")
+                            elif msg.type == aiohttp.WSMsgType.ERROR:
+                                raise ValueError("WebSocket encountered error")
+                print("WARNING: WebSocket session ended, will retry after short delay.")
+                await asyncio.sleep(1)
+            except aiohttp.ClientError as e:
+                raise Exception(f"Client error occurred: {e}") from e
+            except Exception as e:
+                raise Exception(f"Unexpected error occurred {e}")
 
 
 async def main() -> None:
