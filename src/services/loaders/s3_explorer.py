@@ -2,8 +2,12 @@ import json
 import logging
 import os
 from datetime import datetime
+from typing import Iterator
+import re
 
 import boto3
+from dotenv import load_dotenv
+from mypy_boto3_s3 import ListObjectsV2Paginator
 
 from src.utils.generic_logger import logger_setup
 
@@ -49,3 +53,50 @@ class S3Explorer:
             Body=json.dumps(records).encode("utf-8"),
             ContentType="application/json",
         )
+
+    def download_batch(
+        self, source: str, start_time: datetime, end_time: datetime = datetime.utcnow()
+    ) -> list[dict]:
+        """
+        Downloads and returns a list[dict] given source and a range of time
+        """
+        all_records: list[dict] = []
+        for key in self.list_files_with_range(source, start_time, end_time):
+            response = self.client.get_object(Bucket=self.bucket, Key=key)
+            content = response["Body"].read()
+            records = json.loads(content)
+            all_records.extend(records)
+        return all_records
+
+    def list_files_with_range(
+        self, source: str, start_time: datetime, end_time: datetime = datetime.utcnow()
+    ) -> Iterator[str]:
+        """
+        List all files under a given prefix and time range and return a generator of file paths
+        """
+        prefix: str = f"{source}/"
+        regex: re.Pattern = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})\.json$")
+        paginator: ListObjectsV2Paginator = self.client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self.bucket, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                match = regex.search(obj["Key"])
+                if not match:
+                    continue
+                file_time: datetime = datetime.strptime(
+                    match.group(1), "%Y-%m-%dT%H-%M-%S"
+                )
+                if start_time <= file_time <= end_time:
+                    yield obj["Key"]
+
+
+if __name__ == "__main__":
+    load_dotenv()
+    start: datetime = datetime(2025, 5, 23, 00, 00, 00)
+    end: datetime = datetime(2025, 5, 24, 00, 00, 00)
+    my_s3_explorer: S3Explorer = S3Explorer()
+    records = my_s3_explorer.download_batch("binance", start, end)
+    for r in records[:3]:
+        print(r)
+    print(
+        f"Downloaded {len(records)} records from binance between 23rd May 2025 and 24th May 2025"
+    )
