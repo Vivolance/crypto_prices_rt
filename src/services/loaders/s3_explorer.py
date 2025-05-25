@@ -62,6 +62,7 @@ class S3Explorer:
         """
         all_records: list[dict] = []
         for key in self.list_files_with_range(source, start_time, end_time):
+            # get_object reads file in memory
             response = self.client.get_object(Bucket=self.bucket, Key=key)
             content = response["Body"].read()
             records = json.loads(content)
@@ -76,8 +77,15 @@ class S3Explorer:
         """
         prefix: str = f"{source}/"
         regex: re.Pattern = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})\.json$")
+
+        # S3 limits the number of results per API call (usually 1000 objects per request).
+        # If you have more than 1000 files in a folder/prefix, a single list_objects_v2 call will not return everything.
+        # The paginator transparently makes multiple requests behind the scenes, so you can process all files matching
+        # your filter.
         paginator: ListObjectsV2Paginator = self.client.get_paginator("list_objects_v2")
+        # paginate creates an iterator that paginate the response
         for page in paginator.paginate(Bucket=self.bucket, Prefix=prefix):
+            # iterate through objects of each page
             for obj in page.get("Contents", []):
                 match = regex.search(obj["Key"])
                 if not match:
