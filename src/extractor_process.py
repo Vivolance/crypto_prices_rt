@@ -87,7 +87,7 @@ class RawExtractorProcess:
                         self._kucoin_batcher.reset_batch()
                 except Exception as e:
                     print(f"[Kucoin] ERROR (inner): {e}")
-            print("[Kucoin] Kucoin extraction loop exited.")
+            print("[Kucoin] extraction loop exited.")
         except Exception as e:
             print(f"[Kucoin] ERROR (outer): {e}")
 
