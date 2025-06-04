@@ -13,6 +13,13 @@ logger_setup(logger)
 
 
 class S3ExplorerThread(Thread):
+    """
+    No async required here yet:
+    1. Upload is the only blocking method
+    2. Responsible for sending batches in the queue to S3 (I/O)
+
+    Only required if we are doing uploads in parallel. TBC
+    """
     def __init__(
         self, queue: Queue, uploader: S3Explorer, batch_size: int, batch_timeout_s: int
     ) -> None:
