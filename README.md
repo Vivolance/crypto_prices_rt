@@ -78,6 +78,8 @@ docker run -d --name minio \
   quay.io/minio/minio server /data --console-address ":9001"
 ```
 
+If docker container already exists,
+
 ### Other Issues
 1. Data will be missing whenever web socket is closed. WebSocket API cannot retrieve historical data.
 Solution: To add a non-realtime pipeline to ingest missing data
