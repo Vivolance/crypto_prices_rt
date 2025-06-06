@@ -84,4 +84,3 @@ If docker container already exists,
 1. Data will be missing whenever web socket is closed. WebSocket API cannot retrieve historical data.
 Solution: To add a non-realtime pipeline to ingest missing data
 
-2. 
