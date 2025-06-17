@@ -5,7 +5,7 @@ from threading import Thread, Event
 
 from src.models.s3_batch_item import S3BatchItem
 from src.services.batcher.generic_batcher import GenericBatcher
-from src.services.loaders.s3_explorer import S3Explorer
+from src.services.loaders.s3.s3_explorer import S3Explorer
 from src.utils.generic_logger import logger_setup
 
 logger: logging.Logger = logging.Logger(__name__)
