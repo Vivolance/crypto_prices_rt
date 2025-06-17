@@ -8,6 +8,7 @@ SingleMessage = TypeVar("SingleMessage", bound=BaseModel)
 
 class GenericBatcher(Generic[SingleMessage]):
     def __init__(self, batch_size: int, batch_timeout_s: int):
+        # sentinel value, -1 can never happen as a timestamp
         self._batch_start: float = -1
         self._batch: list[SingleMessage] = []
         self._batch_size: int = batch_size
@@ -15,7 +16,8 @@ class GenericBatcher(Generic[SingleMessage]):
 
     def append(self, message: SingleMessage) -> None:
         """
-        Appends message into a batch, if first message, start timer
+        Appends message into a batch, if there are messages, meaning timer has started, append
+        If batch is new, start timer as we are appending first message.
         """
         if not self._batch:
             # time counter to measure duration, to be used later in timeout
