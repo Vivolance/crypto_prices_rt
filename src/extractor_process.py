@@ -17,8 +17,8 @@ from src.services.extractors.kucoin_extractor import (
     KucoinExtractor,
     KucoinExtractorParams,
 )
-from src.services.loaders.s3_explorer import S3Explorer
-from src.services.loaders.s3_explorer_thread import S3ExplorerThread
+from src.services.loaders.s3.s3_explorer import S3Explorer
+from src.services.loaders.s3.s3_explorer_thread import S3ExplorerThread
 from src.utils.generic_logger import logger_setup
 
 logger: logging.Logger = logging.Logger(__name__)
