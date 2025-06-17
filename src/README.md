@@ -164,3 +164,4 @@ docker run -d --name minio \
 1. To test multithreading or async is faster for S3 uploader + extractor
 2. Integration test S3Uploader
 3. Complete Transformer Process
+4. Create Loader to PG
