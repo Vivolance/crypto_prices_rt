@@ -157,6 +157,11 @@ docker run -d --name minio \
   quay.io/minio/minio server /data --console-address ":9001"
 ```
 
+To remove existing container:
+```commandline
+docker rm -f minio
+```
+
 2. Access localhost:9001 to access the web console ui log in with the credentials in 1.
 3. Access bucket name: cryptopricesrt
 
