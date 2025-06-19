@@ -42,6 +42,7 @@ pytest = "^8.3.5"
 pytest-asyncio = "^0.26.0"
 dotenv = "^0.9.9"
 moto = "^5.1.4"
+urllib3 = ">=2.5.0"
 
 [build-system]
 requires = ["poetry-core"]
