@@ -20,6 +20,7 @@ class S3ExplorerThread(Thread):
 
     Only required if we are doing uploads in parallel. TBC
     """
+
     def __init__(
         self, queue: Queue, uploader: S3Explorer, batch_size: int, batch_timeout_s: int
     ) -> None:
