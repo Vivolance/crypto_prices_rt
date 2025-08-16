@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import threading
 from typing import AsyncGenerator, Any
 
@@ -40,7 +41,7 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceRawData]):
         self,
         binance_extractor_params: BinanceExtractorParams,
     ) -> AsyncGenerator[list[BinanceRawData], None]:
-        connection_string: str = "wss://stream.binance.com:9443/ws/!miniTicker@arr"
+        connection_string: str = os.getenv("BINANCE_CONNECTION")
         while not self.stop_event.is_set():
             try:
                 async with aiohttp.ClientSession() as session:

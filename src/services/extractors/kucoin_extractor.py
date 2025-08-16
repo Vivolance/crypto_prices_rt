@@ -1,10 +1,12 @@
 import json
 import logging
 import threading
+import os
 from typing import AsyncGenerator, Any
 
 import aiohttp
 import asyncio
+from dotenv import load_dotenv
 from aiohttp import WSMessage
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_fixed
@@ -36,7 +38,7 @@ class KucoinWSData:
     @staticmethod
     @retry(wait=wait_fixed(0.01), stop=stop_after_attempt(5), reraise=True)
     async def get_kucoin_ws_details() -> dict[str, Any]:
-        BULLET_URL: str = "https://api.kucoin.com/api/v1/bullet-public"
+        BULLET_URL: str = os.getenv("BULLET_URL_KUCOIN")
         try:
             async with aiohttp.ClientSession() as sess:
                 async with sess.post(BULLET_URL) as response:
