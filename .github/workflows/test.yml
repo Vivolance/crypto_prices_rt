@@ -1,4 +1,4 @@
-name: 🔗 Run Integration Tests
+name: Run Integration Tests
 
 on:
   push:

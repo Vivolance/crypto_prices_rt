@@ -6,7 +6,6 @@ from typing import AsyncGenerator, Any
 
 import aiohttp
 import asyncio
-from dotenv import load_dotenv
 from aiohttp import WSMessage
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_fixed
