@@ -1,5 +1,6 @@
 import asyncio
 import pytest
+from dotenv import load_dotenv
 
 from src.models.kucoin_model import KucoinRawData
 from src.services.extractors.kucoin_extractor import (
@@ -7,6 +8,9 @@ from src.services.extractors.kucoin_extractor import (
     KucoinExtractorParams,
     KucoinWSData,
 )
+
+
+load_dotenv()
 
 
 class TestKucoinWSData:

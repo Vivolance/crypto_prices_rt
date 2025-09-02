@@ -7,6 +7,7 @@ from typing import AsyncGenerator, Any
 import aiohttp
 import asyncio
 from aiohttp import ClientWebSocketResponse, WSMessage
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from tenacity import retry, wait_fixed, stop_after_attempt
 
@@ -78,10 +79,12 @@ class BinanceExtractor(AsyncExtractor[BinanceExtractorParams, BinanceRawData]):
 
 async def main() -> None:
     binance_extractor_params: BinanceExtractorParams = BinanceExtractorParams()
-    async for event in BinanceExtractor.extract_async(binance_extractor_params):
+    binance_extractor: BinanceExtractor = BinanceExtractor()
+    async for event in binance_extractor.extract_async(binance_extractor_params):
         print(event)
 
 
 if __name__ == "__main__":
+    load_dotenv()
     event_loop = asyncio.new_event_loop()
     event_loop.run_until_complete(main())

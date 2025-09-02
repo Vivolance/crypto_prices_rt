@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+
 from src.services.extractors.binance_extractor import (
     BinanceExtractorParams,
     BinanceExtractor,
@@ -5,6 +7,9 @@ from src.services.extractors.binance_extractor import (
 import asyncio
 import pytest
 from src.models.binance_model import BinanceRawData
+
+
+load_dotenv()
 
 
 class TestBinanceExtractorStream:

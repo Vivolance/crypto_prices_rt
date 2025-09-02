@@ -7,6 +7,7 @@ from typing import AsyncGenerator, Any
 import aiohttp
 import asyncio
 from aiohttp import WSMessage
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_fixed
 
@@ -110,10 +111,12 @@ class KucoinExtractor(AsyncExtractor[KucoinExtractorParams, KucoinRawData]):
 
 async def main() -> None:
     kucoin_extractor_params: KucoinExtractorParams = KucoinExtractorParams()
-    async for ticker in KucoinExtractor.extract_async(kucoin_extractor_params):
+    kucoin_extractor: KucoinExtractor = KucoinExtractor()
+    async for ticker in kucoin_extractor.extract_async(kucoin_extractor_params):
         print(ticker)
 
 
 if __name__ == "__main__":
+    load_dotenv()
     event_loop = asyncio.new_event_loop()
     event_loop.run_until_complete(main())
