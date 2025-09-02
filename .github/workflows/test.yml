@@ -13,6 +13,8 @@ jobs:
     # Make 'src/' importable in all steps and sub‐processes:
     env:
       PYTHONPATH: ${{ github.workspace }}/src
+      BINANCE_CONNECTION: ${{ secrets.BINANCE_CONNECTION }}
+      BULLET_URL_KUCOIN: ${{ secrets.BULLET_URL_KUCOIN }}
 
     steps:
       # Clones your repository into the runner so future steps can access your files.
