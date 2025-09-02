@@ -38,4 +38,4 @@ jobs:
 
       - name: 🧪 Run Integration Tests (with retries)
         # short tracebacks on failure, -q: quiet mode (fewer dots, cleaner output).
-        run: poetry run pytest tests/integration_test/ --tb=short -q --reruns 3
+        run: poetry run pytest -vv -ra tests/integration_test/ --tb=short --reruns 3
